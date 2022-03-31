@@ -27,23 +27,28 @@ THIS "this"
 NEW "new"
 LENGTH "length"
 PRINTLN "System.out.println"
-
+STRINGARR "String[]"
+OPP ("&&"|"+"|"-"|"*"|"<"|">")
 
 
 %%
 
-{bl}                     printf(" ");
-"//".*                   if(!bloc_comment) printf(" line comment ");   
+{bl}                     
+"//".*                   if(!bloc_comment) {   }
 "/*"                     bloc_comment=1;
-"*/"                     if(bloc_comment ){printf(" bloc comment "); bloc_comment=0;};
+"*/"                     if(bloc_comment ){ bloc_comment=0;};
 \n                       lineno+=1;
 "{"                      if(!bloc_comment){return( ACC_OUV);}
 "}"                      if(!bloc_comment){return( ACC_FER);}
 [(]                      if(!bloc_comment){return( PAR_OUV);}
 [)]                      if(!bloc_comment){return( PAR_FER);}
 "="	                    if(!bloc_comment){return( OPPAFFECT);}
+"!"                      if(!bloc_comment){return( OPPNOT);}
+"."                      if(!bloc_comment){return( DOT);}
 ";"                      if(!bloc_comment){return( PT_VIRG);}
-
+","                      if(!bloc_comment){return( VIRG);}
+"["                      if(!bloc_comment){return( BRAK_OUV); }
+"]"                      if(!bloc_comment){return( BRAK_FER); }
 {CLASS}                  if(!bloc_comment) {return(CLASS);}
 {PUBLIC}                 if(!bloc_comment) {return(PUBLIC);}
 {STATIC}                 if(!bloc_comment) {return(STATIC);}
@@ -58,7 +63,8 @@ PRINTLN "System.out.println"
 {NEW}                    if(!bloc_comment) {return(NEW);}
 {LENGTH}                 if(!bloc_comment) {return(LENGTH);}
 {PRINTLN}                if(!bloc_comment) {return(PRINTLN);}
-
+{STRINGARR}              if(!bloc_comment) {return(STRINGARR);}
+{OPP}                    if(!bloc_comment) {return(OPP);}
 {BOOLEAN_LITERAL}        if(!bloc_comment){return( BOOL);}
 {INTEGER_LITERAL}        if(!bloc_comment){return( INT);}
 {type}                   if(!bloc_comment){return( TYPE);}
@@ -68,12 +74,9 @@ PRINTLN "System.out.println"
 
 %%
 
-int Omain(int argc, char *argv[]) 
+int Xmain(int argc, char *argv[]) 
 {
-     printf("1");
-     yyin = fopen(argv[1], "r");
      yylex();
-     fclose(yyin);
      printf("\n");
 }
 

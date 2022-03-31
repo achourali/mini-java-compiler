@@ -35,27 +35,94 @@
 %token BOOL
 %token INT
 %token TYPE
-%token IDEN
 %token ERROR
+%token STRINGARR
+%token BRAK_OUV
+%token BRAK_FER
+%token VIRG
+%token OPP
+%token DOT
+%token OPPNOT
+
 
 
 %%
 
-program: PUBLIC CLASS IDENT ACC_OUV ACC_FER;
+Program:                MainClass ClassesDeclaration
+MainClass :             CLASS IDENT ACC_OUV 
+                            PUBLIC STATIC VOID MAIN PAR_OUV STRINGARR IDENT PAR_FER ACC_OUV
+                            ACC_FER 
+                        ACC_FER
+ClassesDeclaration:     ClassDeclaration ClassesDeclaration |
+ClassDeclaration:       ClassHead ACC_OUV
+                            VarsDeclarations
+                            MethodsDeclarations
+                        ACC_FER
+ClassHead:              CLASS IDENT |  CLASS IDENT EXTENDS IDENT
+VarsDeclarations:       VarDeclaration VarsDeclarations | 
+VarDeclaration:         DataType IDENT PT_VIRG
+MethodsDeclarations:    MethodDeclaration MethodsDeclarations|
+MethodDeclaration:      PUBLIC DataType IDENT PAR_OUV Arguments PAR_FER ACC_OUV
+                            VarsDeclarations
+                            Statements
+                            ReturnStatement
+                        ACC_FER
+ReturnStatement:        RETURN Expression PT_VIRG | 
+Arguments:              DataType IDENT|DataType IDENT VIRG Arguments  
+DataType:               TYPE | VOID| STRINGARR
+Statements:             Statement Statements| ACC_OUV Statements ACC_FER |
+Statement:              IF PAR_OUV Expression PAR_FER 
+                            Statements 
+                        ELSE Statements 
+                        |
+                        WHILE PAR_OUV Expression PAR_FER Statements 
+                        |
+                        PRINTLN PAR_OUV Expression PAR_FER PT_VIRG
+                        |
+                        IDENT OPPAFFECT Expression PT_VIRG
+                        |
+                        IDENT BRAK_OUV Expression BRAK_FER OPPAFFECT Expression PT_VIRG
+
+                        PRINTLN PAR_OUV Expression PAR_FER PT_VIRG
+Expression:             Expression OPP Expression
+                        |
+                        Expression BRAK_OUV Expression BRAK_FER
+                        |
+                        Expression DOT LENGTH
+                        |
+                        Expression DOT IDENT PAR_OUV Arguments PAR_FER
+                        |
+                        INT
+                        |
+                        BOOL
+                        |
+                        IDENT
+                        |
+                        THIS
+                        |
+                        NEW TYPE BRAK_OUV Expression BRAK_FER
+                        |
+                        NEW IDENT PAR_OUV PAR_FER
+                        |
+                        OPPNOT Expression
+                        |
+                        PAR_OUV Expression PAR_FER
+
+
 
 
 %%
 
 int main( int argc, char **argv ){
-    yyparse();
+    printf("\n \nSTARTING ... \n \n");
+    int result=yyparse();
+    if (result==0) printf("DONE WITH NO ERROS . \n\n");
     return 0;
 }   
 
 
 int yyerror(char *s)
-
-
 {
-	printf("Syntax Error on line %d\n", lineno);
+	printf("Syntax Error on line %d\n\n", lineno);
 	return 0;
 }
