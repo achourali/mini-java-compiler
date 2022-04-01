@@ -2,8 +2,9 @@
     #include <stdio.h>
     #include <string.h>
     int yylex(void);
-    int yyerror(char* s);
+    int yyerror(const char* s);
     extern int lineno;
+    #define YYERROR_VERBOSE 1
 %}
 
 %union {
@@ -51,17 +52,20 @@
 Program:                MainClass ClassesDeclaration
 MainClass :             CLASS IDENT ACC_OUV 
                             PUBLIC STATIC VOID MAIN PAR_OUV STRINGARR IDENT PAR_FER ACC_OUV
+                                VarsDeclarations
+                                Statements
+                                ReturnStatement
                             ACC_FER 
                         ACC_FER
-ClassesDeclaration:     ClassDeclaration ClassesDeclaration |
+ClassesDeclaration:     ClassesDeclaration ClassDeclaration |
 ClassDeclaration:       ClassHead ACC_OUV
                             VarsDeclarations
                             MethodsDeclarations
                         ACC_FER
 ClassHead:              CLASS IDENT |  CLASS IDENT EXTENDS IDENT
-VarsDeclarations:       VarDeclaration VarsDeclarations | 
+VarsDeclarations:        VarsDeclarations VarDeclaration|VarDeclaration | 
 VarDeclaration:         DataType IDENT PT_VIRG
-MethodsDeclarations:    MethodDeclaration MethodsDeclarations|
+MethodsDeclarations:    MethodsDeclarations MethodDeclaration |
 MethodDeclaration:      PUBLIC DataType IDENT PAR_OUV Arguments PAR_FER ACC_OUV
                             VarsDeclarations
                             Statements
@@ -69,8 +73,8 @@ MethodDeclaration:      PUBLIC DataType IDENT PAR_OUV Arguments PAR_FER ACC_OUV
                         ACC_FER
 ReturnStatement:        RETURN Expression PT_VIRG | 
 Arguments:              DataType IDENT|DataType IDENT VIRG Arguments  
-DataType:               TYPE | VOID| STRINGARR
-Statements:             Statement Statements| ACC_OUV Statements ACC_FER |
+DataType:               TYPE | VOID| STRINGARR | IDENT
+Statements:             Statement| Statements Statement| ACC_OUV Statements ACC_FER |
 Statement:              IF PAR_OUV Expression PAR_FER 
                             Statements 
                         ELSE Statements 
@@ -121,8 +125,8 @@ int main( int argc, char **argv ){
 }   
 
 
-int yyerror(char *s)
+int yyerror(const char* s)
 {
-	printf("Syntax Error on line %d\n\n", lineno);
+	printf("Syntax Error on line %d : %s\n\n", lineno,s); 
 	return 0;
 }

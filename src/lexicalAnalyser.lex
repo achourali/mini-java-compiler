@@ -49,36 +49,36 @@ OPP ("&&"|"+"|"-"|"*"|"<"|">")
 ","                      if(!bloc_comment){return( VIRG);}
 "["                      if(!bloc_comment){return( BRAK_OUV); }
 "]"                      if(!bloc_comment){return( BRAK_FER); }
-{CLASS}                  if(!bloc_comment) {return(CLASS);}
-{PUBLIC}                 if(!bloc_comment) {return(PUBLIC);}
-{STATIC}                 if(!bloc_comment) {return(STATIC);}
-{VOID}                   if(!bloc_comment) {return(VOID);}
-{MAIN}                   if(!bloc_comment) {return(MAIN);}
-{EXTENDS}                if(!bloc_comment) {return(EXTENDS);}
-{RETURN}                 if(!bloc_comment) {return(RETURN);}
-{IF}                     if(!bloc_comment) {return(IF);}
-{ELSE}                   if(!bloc_comment) {return(ELSE);}
-{WHILE}                  if(!bloc_comment) {return(WHILE);}
-{THIS}                   if(!bloc_comment) {return(THIS);}
-{NEW}                    if(!bloc_comment) {return(NEW);}
-{LENGTH}                 if(!bloc_comment) {return(LENGTH);}
-{PRINTLN}                if(!bloc_comment) {return(PRINTLN);}
-{STRINGARR}              if(!bloc_comment) {return(STRINGARR);}
-{OPP}                    if(!bloc_comment) {return(OPP);}
+{CLASS}                  if(!bloc_comment){return( CLASS);}
+{PUBLIC}                 if(!bloc_comment){return( PUBLIC);}
+{STATIC}                 if(!bloc_comment){return( STATIC);}
+{VOID}                   if(!bloc_comment){return( VOID);}
+{MAIN}                   if(!bloc_comment){return( MAIN);}
+{EXTENDS}                if(!bloc_comment){return( EXTENDS);}
+{RETURN}                 if(!bloc_comment){return( RETURN);}
+{IF}                     if(!bloc_comment){return( IF);}
+{ELSE}                   if(!bloc_comment){return( ELSE);}
+{WHILE}                  if(!bloc_comment){return( WHILE);}
+{THIS}                   if(!bloc_comment){return( THIS);}
+{NEW}                    if(!bloc_comment){return( NEW);}
+{LENGTH}                 if(!bloc_comment){return( LENGTH);}
+{PRINTLN}                if(!bloc_comment){return( PRINTLN);}
+{STRINGARR}              if(!bloc_comment){return( STRINGARR);}
+{OPP}                    if(!bloc_comment){return( OPP);}
 {BOOLEAN_LITERAL}        if(!bloc_comment){return( BOOL);}
 {INTEGER_LITERAL}        if(!bloc_comment){return( INT);}
 {type}                   if(!bloc_comment){return( TYPE);}
-{identifier}             if(!bloc_comment){return(IDENT);}
+{identifier}             if(!bloc_comment){return( IDENT);}
 .                        if(!bloc_comment){return( ERROR);}
 
 
 %%
 
-int Xmain(int argc, char *argv[]) 
-{
-     yylex();
-     printf("\n");
-}
+// int main(int argc, char *argv[]) 
+// {
+//      yylex();
+//      printf("\n");
+// }
 
 
 int yywrap()
