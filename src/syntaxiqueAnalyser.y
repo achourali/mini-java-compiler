@@ -66,13 +66,13 @@ ClassHead:              CLASS IDENT |  CLASS IDENT EXTENDS IDENT
 VarsDeclarations:        VarsDeclarations VarDeclaration|VarDeclaration | 
 VarDeclaration:         DataType IDENT PT_VIRG
 MethodsDeclarations:    MethodsDeclarations MethodDeclaration |
-MethodDeclaration:      PUBLIC DataType IDENT PAR_OUV Arguments PAR_FER ACC_OUV
+MethodDeclaration:      PUBLIC DataType IDENT PAR_OUV ArgumentsDeclarations PAR_FER ACC_OUV
                             VarsDeclarations
                             Statements
                             ReturnStatement
                         ACC_FER
 ReturnStatement:        RETURN Expression PT_VIRG | 
-Arguments:              DataType IDENT|DataType IDENT VIRG Arguments  
+ArgumentsDeclarations:              DataType IDENT|DataType IDENT VIRG ArgumentsDeclarations  
 DataType:               TYPE | VOID| STRINGARR | IDENT
 Statements:             Statement| Statements Statement| ACC_OUV Statements ACC_FER |
 Statement:              IF PAR_OUV Expression PAR_FER 
@@ -87,7 +87,10 @@ Statement:              IF PAR_OUV Expression PAR_FER
                         |
                         IDENT BRAK_OUV Expression BRAK_FER OPPAFFECT Expression PT_VIRG
 
+
                         PRINTLN PAR_OUV Expression PAR_FER PT_VIRG
+
+Arguments:              IDENT VIRG Arguments  | INT VIRG Arguments |BOOL VIRG Arguments  | IDENT | INT | BOOL 
 Expression:             Expression OPP Expression
                         |
                         Expression BRAK_OUV Expression BRAK_FER
