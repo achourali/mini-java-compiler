@@ -135,19 +135,8 @@ node *searchVariableInAccesibleScopes(char *varName)
 
 void initVar(char *varName)
 {
-    node *tempNode = symbolicTable;
-    while (tempNode != NULL)
-    {
-        if (
-            strcmp(tempNode->name, varName) == 0 &&
-            strcmp(tempNode->nature, "VARIABLE") == 0)
-        {
-            tempNode->isInitialised = 1;
-            break;
-        }
-
-        tempNode = tempNode->next;
-    }
+    node *var  = searchVariableInAccesibleScopes(varName);
+    if(var)var->isInitialised = 1;
 };
 
 void usingVar(char *varName)
@@ -164,7 +153,7 @@ void usingVar(char *varName)
     else
     {
 
-        printf("Error on line %d : %s.\n\n", lineno, "Variable used but not initialised ");
+        printf("Error on line %d : Variable %s used but not initialised .\n\n", lineno,varName);
         errors++;
     }
 };

@@ -13,7 +13,7 @@ chiffre   [0-9]
 type ("int"|"boolean"|"String"|"void")("[""]")?
 identifier ([a-zA-Z_][a-zA-Z0-9_]*)
 BOOLEAN_LITERAL "true"|"false"
-INTEGER_LITERAL  "-"?[1-9][0-9]*
+INTEGER_LITERAL  "-"?[0-9][0-9]*
 iderrone  {chiffre}(.*)
 CLASS "class"
 PUBLIC "public"
