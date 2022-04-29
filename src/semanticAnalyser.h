@@ -40,7 +40,12 @@ void initVar(char *varName);
 void usingVar(char *varName);
 int checkIfAllVarsAreUsed();
 void addFunction(char *name, char *returnType);
-void clearArgumentsTypesList();
+void clearParametersTypesList();
+void addParameterType(char* type);
+void clearArgumentsList();
+void addArgumentTypeFromName(char* varName);
 void addArgumentType(char* type);
+void callFunction(char* functionName);
+node *searchFunctionInScope(char *varName);
 
 #endif

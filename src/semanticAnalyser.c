@@ -7,7 +7,8 @@ int idCounter = 0;
 scope *currentLocalScope = NULL;
 scope *currentMemberScope = NULL;
 node *symbolicTable = NULL;
-argumentNode *argumentsList = NULL;
+argumentNode *parametersTypesList = NULL;
+argumentNode *argumentsTypesList = NULL;
 extern int lineno;
 extern int errors;
 
@@ -187,8 +188,7 @@ int checkIfAllVarsAreUsed()
 
 void addFunction(char *name, char *returnType)
 {
-    printf("adding function %s %s :\n",returnType, name);
-    
+
     node *newNode = (node *)malloc(sizeof(node));
 
     newNode->name = name;
@@ -196,7 +196,7 @@ void addFunction(char *name, char *returnType)
     newNode->type = returnType;
     newNode->isInitialised = 0;
     newNode->isUsed = 0;
-    newNode->args = argumentsList;
+    newNode->args = parametersTypesList;
 
     newNode->scope = currentMemberScope;
 
@@ -212,29 +212,101 @@ void addFunction(char *name, char *returnType)
 
         tempNode->next = newNode;
     }
-    
 }
 
-void clearArgumentsTypesList()
+void clearParametersTypesList()
 {
-    argumentsList = NULL;
+    parametersTypesList = NULL;
 }
+void addParameterType(char *type)
+{
+    argumentNode *parameter = (argumentNode *)malloc(sizeof(argumentNode));
+    parameter->type = type;
+    parameter->next = NULL;
+    if (parametersTypesList == NULL)
+        parametersTypesList = parameter;
+    else
+    {
+        parameter->next = parametersTypesList;
+        parametersTypesList = parameter;
+    }
+}
+
+void clearArgumentsList()
+{
+    argumentsTypesList = NULL;
+};
+
 void addArgumentType(char *type)
 {
     argumentNode *argument = (argumentNode *)malloc(sizeof(argumentNode));
     argument->type = type;
     argument->next = NULL;
-    if (argumentsList == NULL)
-        argumentsList = argument;
+    if (argumentsTypesList == NULL)
+        argumentsTypesList = argument;
     else
     {
-        argumentNode *tempArgument = argumentsList;
-        while (tempArgument->next != NULL)
-        {
-            tempArgument = tempArgument->next;
-        }
-        tempArgument->next = argument;
+        argument->next = argumentsTypesList;
+        argumentsTypesList = argument;
     }
+}
+
+void addArgumentTypeFromName(char *varName)
+{
+    node *var = searchVariableInAccesibleScopes(varName);
+    if (var)
+        addArgumentType(var->type);
+    else
+    {
+        printf("Error on line %d : could not find variable '%s'  .\n\n", lineno, varName);
+        errors++;
+    }
+}
+
+void callFunction(char *functionName)
+{
+    node *function = searchFunctionInScope(functionName);
+
+    if (!function)
+    {
+        printf("Error on line %d : could not find function '%s'  .\n\n", lineno, functionName);
+        errors++;
+        return;
+    }
+
+    argumentNode *tempArg = argumentsTypesList;
+    argumentNode *tempParam = function->args;
+    while (tempArg != NULL && tempParam != NULL)
+    {
+        if (strcmp(tempArg->type, tempParam->type) != 0)
+        {
+            printf("Error on line %d : arguments type error when calling function '%s'  .\n\n", lineno, functionName);
+            errors++;
+            return;
+        };
+        tempArg = tempArg->next;
+        tempParam = tempParam->next;
+    }
+    if(tempArg!=NULL || tempParam!=NULL){
+        printf("Error on line %d : number of arguments error when calling function '%s'  .\n\n", lineno, functionName);
+        errors++;
+        return;
+    }
+}
+
+node *searchFunctionInScope(char *varName)
+{
+    node *tempNode = symbolicTable;
+    while (tempNode != NULL)
+    {
+        if (
+            strcmp(tempNode->name, varName) == 0 &&
+            strcmp(tempNode->nature, "FUNCTION") == 0 &&
+            tempNode->scope == currentMemberScope)
+            return tempNode;
+        tempNode = tempNode->next;
+    }
+    return NULL;
 }
 
 void printSymbolicTable()
@@ -242,15 +314,16 @@ void printSymbolicTable()
 
     printf("\n\n------------Symbolic table----------\n");
     node *tempNode = symbolicTable;
-    printf("%-6s%-10s%-7s%-5s%-5s%-8s%s\n", "name", "nature", "type", "init", "used", "scopeId","args");
+    printf("%-6s%-10s%-7s%-5s%-5s%-8s%s\n", "name", "nature", "type", "init", "used", "scopeId", "args");
 
     while (tempNode != NULL)
     {
         printf("%-6s%-10s%-7s%-5d%-5d%-8d", tempNode->name, tempNode->nature, tempNode->type, tempNode->isInitialised, tempNode->isUsed, tempNode->scope->id);
-        argumentNode* tempArg=tempNode->args;
-        while(tempArg!=NULL){
-            printf("%s,",tempArg->type);
-            tempArg=tempArg->next;
+        argumentNode *tempArg = tempNode->args;
+        while (tempArg != NULL)
+        {
+            printf("%s,", tempArg->type);
+            tempArg = tempArg->next;
         }
 
         printf("\n");

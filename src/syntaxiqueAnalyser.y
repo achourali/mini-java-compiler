@@ -10,6 +10,7 @@
     extern int lineno;
     #define YYERROR_VERBOSE 1;
     int errors=0;
+    #define YYDEBUG 1
 
 
     
@@ -79,19 +80,19 @@ ClassHead:              CLASS IDENT |  CLASS IDENT EXTENDS IDENT
 VarsDeclarations:        VarsDeclarations VarDeclaration |
 VarDeclaration:         DataType IDENT PT_VIRG {addVariable($2,$1);}
 MethodsDeclarations:    MethodsDeclarations MethodDeclaration |
-MethodDeclaration:      PUBLIC DataType IDENT {enterLocalScope();} PAR_OUV{clearArgumentsTypesList();} ArgumentsDeclarations PAR_FER {addFunction($3,$2);} ACC_OUV
+MethodDeclaration:      PUBLIC DataType IDENT {enterLocalScope();} PAR_OUV{clearParametersTypesList();} ArgumentsDeclarations PAR_FER {addFunction($3,$2);} ACC_OUV
                             VarsDeclarations
                             Statements
                             ReturnStatement
                         ACC_FER {exitCurrentLocalScope();}
 ReturnStatement:        RETURN Expression PT_VIRG | 
-ArgumentsDeclarations:  DataType IDENT {addArgumentType($1);addVariable($2,$1);}|
-                        DataType IDENT VIRG ArgumentsDeclarations {addArgumentType($1);addVariable($2,$1);} |
+ArgumentsDeclarations:  DataType IDENT {addParameterType($1);addVariable($2,$1);}|
+                        DataType IDENT VIRG ArgumentsDeclarations {addParameterType($1);addVariable($2,$1);} |
                         ; 
 DataType:               TYPE | VOID| STRINGARR | IDENT;
-Statements:             Statements Statement| 
-                        ACC_OUV {enterLocalScope();} Statements ACC_FER  {exitCurrentLocalScope();}|
-                        VarDeclaration| 
+Statements:             Statements Statement|
+                        ACC_OUV {enterLocalScope();} VarsDeclarations Statements ACC_FER  {exitCurrentLocalScope();}
+                        |
                         ;
 Statement:              IF PAR_OUV Expression PAR_FER 
                             Statements 
@@ -104,11 +105,16 @@ Statement:              IF PAR_OUV Expression PAR_FER
                         IDENT OPPAFFECT Expression PT_VIRG {initVar($1);}
                         |
                         IDENT BRAK_OUV Expression BRAK_FER OPPAFFECT Expression PT_VIRG {initVar($1);}
+                        |
+                        THIS DOT IDENT PAR_OUV {clearArgumentsList();} Arguments PAR_FER PT_VIRG {callFunction($3);}
+                        
 
-
-                        PRINTLN PAR_OUV Expression PAR_FER PT_VIRG
-
-Arguments:              IDENT VIRG Arguments  | INT VIRG Arguments |BOOL VIRG Arguments  | IDENT | INT | BOOL 
+Arguments:              IDENT VIRG Arguments {usingVar($1);addArgumentTypeFromName($1);}  
+                        | INT VIRG Arguments {addArgumentType("int");}
+                        |BOOL VIRG Arguments  {addArgumentType("boolean");}
+                        | IDENT {usingVar($1);addArgumentTypeFromName($1);}   
+                        | INT {addArgumentType("int");}
+                        | BOOL {addArgumentType("boolean");}
 Expression:             Expression OPP Expression
                         |
                         Expression BRAK_OUV Expression BRAK_FER
@@ -132,6 +138,7 @@ Expression:             Expression OPP Expression
                         OPPNOT Expression
                         |
                         PAR_OUV Expression PAR_FER
+                        
 
 
 
