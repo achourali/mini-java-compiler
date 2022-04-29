@@ -1,80 +1,97 @@
 %{
     #include <stdio.h>
     #include <string.h>
+    #include "semanticAnalyser.h"
+
+
+    int yyparse(void);
     int yylex(void);
     int yyerror(const char* s);
     extern int lineno;
-    #define YYERROR_VERBOSE 1
+    #define YYERROR_VERBOSE 1;
+    int errors=0;
+
+
+    
 %}
 
 %union {
-    int i;
-    char *s;
-};
+   char* stringValue;
+   char** stringsValues;
+}
 
-%token CLASS
-%token PUBLIC 
-%token STATIC 
-%token VOID 
-%token MAIN 
-%token EXTENDS   
-%token RETURN
-%token IF
-%token ELSE 
-%token WHILE 
-%token THIS
-%token NEW
-%token LENGTH 
-%token PRINTLN 
-%token IDENT
-%token ACC_OUV
-%token ACC_FER
-%token PAR_OUV
-%token PAR_FER
-%token OPPAFFECT
-%token PT_VIRG
-%token BOOL
-%token INT
-%token TYPE
-%token ERROR
-%token STRINGARR
-%token BRAK_OUV
-%token BRAK_FER
-%token VIRG
-%token OPP
-%token DOT
-%token OPPNOT
+    
 
+%token <stringValue>CLASS
+%token <stringValue>PUBLIC 
+%token <stringValue>STATIC 
+%token <stringValue>VOID 
+%token <stringValue>MAIN 
+%token <stringValue>EXTENDS   
+%token <stringValue>RETURN
+%token <stringValue>IF
+%token <stringValue>ELSE 
+%token <stringValue>WHILE 
+%token <stringValue>THIS
+%token <stringValue>NEW
+%token <stringValue>LENGTH 
+%token <stringValue>PRINTLN 
+%token <stringValue>IDENT
+%token <stringValue>ACC_OUV
+%token <stringValue>ACC_FER
+%token <stringValue>PAR_OUV
+%token <stringValue>PAR_FER
+%token <stringValue>OPPAFFECT
+%token <stringValue>PT_VIRG
+%token <stringValue>BOOL
+%token <stringValue>INT
+%token <stringValue>TYPE
+%token <stringValue>ERROR
+%token <stringValue>STRINGARR
+%token <stringValue>BRAK_OUV
+%token <stringValue>BRAK_FER
+%token <stringValue>VIRG
+%token <stringValue>OPP
+%token <stringValue>DOT
+%token <stringValue>OPPNOT
+
+
+%type <stringValue> DataType ;
 
 
 %%
 
-Program:                MainClass ClassesDeclaration
-MainClass :             CLASS IDENT ACC_OUV 
-                            PUBLIC STATIC VOID MAIN PAR_OUV STRINGARR IDENT PAR_FER ACC_OUV
+Program:                MainClass ClassesDeclaration 
+MainClass :             CLASS IDENT ACC_OUV  {enterMemberScope();}
+                            PUBLIC STATIC VOID MAIN PAR_OUV STRINGARR IDENT PAR_FER ACC_OUV {enterLocalScope();}
                                 VarsDeclarations
                                 Statements
                                 ReturnStatement
-                            ACC_FER 
-                        ACC_FER
+                            ACC_FER {exitCurrentLocalScope();}
+                        ACC_FER {exitCurrentMemberScope();}
 ClassesDeclaration:     ClassesDeclaration ClassDeclaration |
-ClassDeclaration:       ClassHead ACC_OUV
+ClassDeclaration:       ClassHead ACC_OUV {enterMemberScope();}
                             VarsDeclarations
                             MethodsDeclarations
-                        ACC_FER
+                         ACC_FER {exitCurrentMemberScope();}
 ClassHead:              CLASS IDENT |  CLASS IDENT EXTENDS IDENT
-VarsDeclarations:        VarsDeclarations VarDeclaration|VarDeclaration | 
-VarDeclaration:         DataType IDENT PT_VIRG
+VarsDeclarations:       VarsDeclarations VarDeclaration|VarDeclaration | 
+VarDeclaration:         DataType IDENT PT_VIRG {addVariable($2,$1);}
 MethodsDeclarations:    MethodsDeclarations MethodDeclaration |
-MethodDeclaration:      PUBLIC DataType IDENT PAR_OUV ArgumentsDeclarations PAR_FER ACC_OUV
+MethodDeclaration:      PUBLIC DataType IDENT PAR_OUV{clearArgumentsTypesList();} ArgumentsDeclarations PAR_FER {addFunction($3,$2);} ACC_OUV  {enterLocalScope();} 
                             VarsDeclarations
                             Statements
                             ReturnStatement
-                        ACC_FER
+                        ACC_FER {exitCurrentLocalScope();}
 ReturnStatement:        RETURN Expression PT_VIRG | 
-ArgumentsDeclarations:              DataType IDENT|DataType IDENT VIRG ArgumentsDeclarations  
-DataType:               TYPE | VOID| STRINGARR | IDENT
-Statements:             Statement| Statements Statement| ACC_OUV Statements ACC_FER |
+ArgumentsDeclarations:  DataType IDENT {addArgumentType($1);addVariable($2,$1);}|
+                        DataType IDENT VIRG ArgumentsDeclarations {addArgumentType($1);addVariable($2,$1);} |
+                        
+DataType:               TYPE | VOID| STRINGARR | IDENT;
+Statements:             Statement|
+                        Statements Statement| 
+                        ACC_OUV {enterLocalScope();} Statements ACC_FER  {exitCurrentLocalScope();}|
+                        VarDeclaration|
 Statement:              IF PAR_OUV Expression PAR_FER 
                             Statements 
                         ELSE Statements 
@@ -83,9 +100,9 @@ Statement:              IF PAR_OUV Expression PAR_FER
                         |
                         PRINTLN PAR_OUV Expression PAR_FER PT_VIRG
                         |
-                        IDENT OPPAFFECT Expression PT_VIRG
+                        IDENT OPPAFFECT Expression PT_VIRG {initVar($1);}
                         |
-                        IDENT BRAK_OUV Expression BRAK_FER OPPAFFECT Expression PT_VIRG
+                        IDENT BRAK_OUV Expression BRAK_FER OPPAFFECT Expression PT_VIRG {initVar($1);}
 
 
                         PRINTLN PAR_OUV Expression PAR_FER PT_VIRG
@@ -95,15 +112,15 @@ Expression:             Expression OPP Expression
                         |
                         Expression BRAK_OUV Expression BRAK_FER
                         |
-                        Expression DOT LENGTH
+                        Expression DOT LENGTH PAR_OUV PAR_FER
                         |
-                        Expression DOT IDENT PAR_OUV Arguments PAR_FER
+                        Expression DOT IDENT PAR_OUV Arguments PAR_FER 
                         |
                         INT
                         |
                         BOOL
                         |
-                        IDENT
+                        IDENT {usingVar($1);}
                         |
                         THIS
                         |
@@ -121,15 +138,21 @@ Expression:             Expression OPP Expression
 %%
 
 int main( int argc, char **argv ){
-    printf("\n \nSTARTING ... \n \n");
-    int result=yyparse();
-    if (result==0) printf("DONE WITH NO ERROS . \n\n");
+    printf("\n\nSTARTING ... \n\n");
+    errors+=yyparse();
+    checkIfAllVarsAreUsed();
+    if (errors==0) {
+        printSymbolicTable();
+        printf("\n\nDONE WITH NO ERROS . \n\n");
+        
+    }
     return 0;
 }   
 
 
 int yyerror(const char* s)
 {
-	printf("Syntax Error on line %d : %s\n\n", lineno,s); 
+	printf("Error on line %d : %s\n\n", lineno,s); 
+    errors++;
 	return 0;
 }

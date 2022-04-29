@@ -1,0 +1,1 @@
+nodemon --ignore 'build/'  -e '*' --exec  "./run.sh < javaFiles/example2.java"
