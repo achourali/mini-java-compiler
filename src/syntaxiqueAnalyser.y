@@ -75,10 +75,10 @@ ClassDeclaration:       ClassHead ACC_OUV {enterMemberScope();}
                             MethodsDeclarations
                          ACC_FER {exitCurrentMemberScope();}
 ClassHead:              CLASS IDENT |  CLASS IDENT EXTENDS IDENT
-VarsDeclarations:       VarsDeclarations VarDeclaration|VarDeclaration | 
+VarsDeclarations:        VarsDeclarations VarDeclaration|VarDeclaration |
 VarDeclaration:         DataType IDENT PT_VIRG {addVariable($2,$1);}
 MethodsDeclarations:    MethodsDeclarations MethodDeclaration |
-MethodDeclaration:      PUBLIC DataType IDENT PAR_OUV{clearArgumentsTypesList();} ArgumentsDeclarations PAR_FER {addFunction($3,$2);} ACC_OUV  {enterLocalScope();} 
+MethodDeclaration:      PUBLIC DataType IDENT {enterLocalScope();} PAR_OUV{clearArgumentsTypesList();} ArgumentsDeclarations PAR_FER {addFunction($3,$2);} ACC_OUV
                             VarsDeclarations
                             Statements
                             ReturnStatement
@@ -86,12 +86,13 @@ MethodDeclaration:      PUBLIC DataType IDENT PAR_OUV{clearArgumentsTypesList();
 ReturnStatement:        RETURN Expression PT_VIRG | 
 ArgumentsDeclarations:  DataType IDENT {addArgumentType($1);addVariable($2,$1);}|
                         DataType IDENT VIRG ArgumentsDeclarations {addArgumentType($1);addVariable($2,$1);} |
-                        
+                        ; 
 DataType:               TYPE | VOID| STRINGARR | IDENT;
 Statements:             Statement|
                         Statements Statement| 
                         ACC_OUV {enterLocalScope();} Statements ACC_FER  {exitCurrentLocalScope();}|
-                        VarDeclaration|
+                        VarDeclaration| 
+                        ;
 Statement:              IF PAR_OUV Expression PAR_FER 
                             Statements 
                         ELSE Statements 
