@@ -102,8 +102,14 @@ Statements:             Statements Statement|
                         |
                         ;
 Statement:              IF PAR_OUV Expression PAR_FER
+                        {addCodeNode("SIFAUX",-1,currentFunction);}
                             Statements 
+                        { 
+                            addCodeNode("SAUT",-1,currentFunction); 
+                            updateLastSIFAUX();
+                        }
                         ELSE Statements 
+                        {updateLastSAUT();}
                         |
                         WHILE PAR_OUV Expression PAR_FER Statements 
                         |
@@ -139,6 +145,14 @@ Expression:             Expression OPP Expression {
                                 addCodeNode("DIV",-1,currentFunction);
                             }else if (strcmp($2, "*") == 0) {
                                 addCodeNode("MUL",-1,currentFunction);
+                            }else if (strcmp($2, "<=") == 0) {
+                                addCodeNode("INFE",-1,currentFunction);
+                            }else if (strcmp($2, ">=") == 0) {
+                                addCodeNode("SUPE",-1,currentFunction);
+                            }else if (strcmp($2, "<") == 0) {
+                                addCodeNode("INF",-1,currentFunction);
+                            }else if (strcmp($2, ">") == 0) {
+                                addCodeNode("SUP",-1,currentFunction);
                             }
                         }
                         |
