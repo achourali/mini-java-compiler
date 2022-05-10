@@ -30,7 +30,7 @@ NEW "new"
 LENGTH "length"
 PRINTLN "System.out.println"
 STRINGARR "String[]"
-OPP ("&&"|"+"|"-"|"*"|"<"|">")
+OPP ("&&"|"+"|"-"|"*"|"<"|">"|"==")
 
 
 %%

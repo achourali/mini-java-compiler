@@ -1,7 +1,11 @@
 #ifndef SEMANTIC_ANALYSER_H
+#define SEMANTIC_ANALYSER_H
 
-struct node
+#include "assemblyCodeGenerator.h"
+
+struct symbolNode
 {
+    int index;
     char *name;
     char *nature;
     char *type;
@@ -9,14 +13,16 @@ struct node
     int isUsed;
     struct argumentNode *args;
     struct scope *scope;
-    struct node *next;
+    struct symbolNode *next;
+    struct codeNode *codeTable;
 };
 
-typedef struct node node;
+typedef struct symbolNode symbolNode;
 
-struct argumentNode{
-    char* type;
-    struct argumentNode * next;
+struct argumentNode
+{
+    char *type;
+    struct argumentNode *next;
 };
 typedef struct argumentNode argumentNode;
 
@@ -35,17 +41,18 @@ void printSymbolicTable();
 void enterMemberScope();
 void exitCurrentMemberScope();
 void test();
-node *searchVaribleInScope(char *varName, scope *scope);
+symbolNode *searchVaribleInScope(char *varName, scope *scope);
 void initVar(char *varName);
 void usingVar(char *varName);
 int checkIfAllVarsAreUsed();
-void addFunction(char *name, char *returnType);
+symbolNode *addFunction(char *name, char *returnType);
 void clearParametersTypesList();
-void addParameterType(char* type);
+void addParameterType(char *type);
 void clearArgumentsList();
-void addArgumentTypeFromName(char* varName);
-void addArgumentType(char* type);
-void callFunction(char* functionName);
-node *searchFunctionInScope(char *varName);
+void addArgumentTypeFromName(char *varName);
+void addArgumentType(char *type);
+void callFunction(char *functionName);
+symbolNode *searchFunctionInScope(char *varName);
+symbolNode *searchVariableInAccesibleScopes(char *varName);
 
 #endif

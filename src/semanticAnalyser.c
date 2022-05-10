@@ -6,7 +6,7 @@
 int idCounter = 0;
 scope *currentLocalScope = NULL;
 scope *currentMemberScope = NULL;
-node *symbolicTable = NULL;
+symbolNode *symbolicTable = NULL;
 argumentNode *parametersTypesList = NULL;
 argumentNode *argumentsTypesList = NULL;
 extern int lineno;
@@ -48,7 +48,7 @@ void addVariable(char *name, char *type)
         scope *tempScope = currentLocalScope;
         while (tempScope != NULL)
         {
-            node *varWithSameName = searchVaribleInScope(name, tempScope);
+            symbolNode *varWithSameName = searchVaribleInScope(name, tempScope);
             if (varWithSameName != NULL)
             {
 
@@ -61,7 +61,7 @@ void addVariable(char *name, char *type)
     }
     else
     {
-        node *varWithSameName = searchVaribleInScope(name, currentMemberScope);
+        symbolNode *varWithSameName = searchVaribleInScope(name, currentMemberScope);
         if (varWithSameName != NULL)
         {
             printf("Error on line %d : %s.\n\n", lineno, "Variable already declared ");
@@ -70,7 +70,7 @@ void addVariable(char *name, char *type)
         }
     }
 
-    node *newNode = (node *)malloc(sizeof(node));
+    symbolNode *newNode = (symbolNode *)malloc(sizeof(symbolNode));
 
     newNode->name = name;
     newNode->nature = "VARIABLE";
@@ -78,6 +78,7 @@ void addVariable(char *name, char *type)
     newNode->isInitialised = 0;
     newNode->isUsed = 0;
     newNode->args = NULL;
+    newNode->codeTable = NULL;
 
     if (currentLocalScope != NULL)
         newNode->scope = currentLocalScope;
@@ -85,21 +86,26 @@ void addVariable(char *name, char *type)
         newNode->scope = currentMemberScope;
 
     if (symbolicTable == NULL)
+    {
+        newNode->index = 0;
         symbolicTable = newNode;
+    }
     else
     {
-        node *tempNode = symbolicTable;
+        symbolNode *tempNode = symbolicTable;
         while (tempNode->next != NULL)
         {
             tempNode = tempNode->next;
+            newNode->index = tempNode->index;
         }
+        newNode->index++;
 
         tempNode->next = newNode;
     }
 }
-node *searchVaribleInScope(char *varName, scope *scope)
+symbolNode *searchVaribleInScope(char *varName, scope *scope)
 {
-    node *tempNode = symbolicTable;
+    symbolNode *tempNode = symbolicTable;
     while (tempNode != NULL)
     {
         if (
@@ -112,17 +118,18 @@ node *searchVaribleInScope(char *varName, scope *scope)
     return NULL;
 }
 
-node *searchVariableInAccesibleScopes(char *varName)
+symbolNode *searchVariableInAccesibleScopes(char *varName)
 {
-    node *varWithSameName = NULL;
+    symbolNode *varWithSameName = NULL;
 
     scope *tempScope = currentLocalScope;
     while (tempScope != NULL)
     {
-        node *varWithSameName = searchVaribleInScope(varName, tempScope);
+            varWithSameName = searchVaribleInScope(varName, tempScope);
         if (varWithSameName != NULL)
-
-            return varWithSameName;
+        {
+            break;
+        }
 
         tempScope = tempScope->parent;
     }
@@ -130,18 +137,20 @@ node *searchVariableInAccesibleScopes(char *varName)
     if (varWithSameName == NULL)
         varWithSameName = searchVaribleInScope(varName, currentMemberScope);
 
+
     return varWithSameName;
 }
 
 void initVar(char *varName)
 {
-    node *var  = searchVariableInAccesibleScopes(varName);
-    if(var)var->isInitialised = 1;
+    symbolNode *var = searchVariableInAccesibleScopes(varName);
+    if (var)
+        var->isInitialised = 1;
 };
 
 void usingVar(char *varName)
 {
-    node *var = searchVariableInAccesibleScopes(varName);
+    symbolNode *var = searchVariableInAccesibleScopes(varName);
     if (var == NULL)
     {
         printf("Error on line %d : %s.\n\n", lineno, "Variable is not declared ");
@@ -153,7 +162,7 @@ void usingVar(char *varName)
     else
     {
 
-        printf("Error on line %d : Variable %s used but not initialised .\n\n", lineno,varName);
+        printf("Error on line %d : Variable %s used but not initialised .\n\n", lineno, varName);
         errors++;
     }
 };
@@ -161,7 +170,7 @@ void usingVar(char *varName)
 int checkIfAllVarsAreUsed()
 {
 
-    node *tempNode = symbolicTable;
+    symbolNode *tempNode = symbolicTable;
     while (tempNode != NULL)
     {
         if (strcmp(tempNode->nature, "VARIABLE") == 0 && tempNode->isUsed == 0)
@@ -175,10 +184,10 @@ int checkIfAllVarsAreUsed()
     return 1;
 }
 
-void addFunction(char *name, char *returnType)
+symbolNode *addFunction(char *name, char *returnType)
 {
 
-    node *newNode = (node *)malloc(sizeof(node));
+    symbolNode *newNode = (symbolNode *)malloc(sizeof(symbolNode));
 
     newNode->name = name;
     newNode->nature = "FUNCTION";
@@ -186,21 +195,26 @@ void addFunction(char *name, char *returnType)
     newNode->isInitialised = 0;
     newNode->isUsed = 0;
     newNode->args = parametersTypesList;
-
     newNode->scope = currentMemberScope;
+    newNode->codeTable = NULL;
 
     if (symbolicTable == NULL)
+    {
         symbolicTable = newNode;
+        newNode->index = 0;
+    }
     else
     {
-        node *tempNode = symbolicTable;
+        symbolNode *tempNode = symbolicTable;
         while (tempNode->next != NULL)
         {
             tempNode = tempNode->next;
+            newNode->index = tempNode->index;
         }
-
+        newNode->index++;
         tempNode->next = newNode;
     }
+    return newNode;
 }
 
 void clearParametersTypesList()
@@ -242,7 +256,7 @@ void addArgumentType(char *type)
 
 void addArgumentTypeFromName(char *varName)
 {
-    node *var = searchVariableInAccesibleScopes(varName);
+    symbolNode *var = searchVariableInAccesibleScopes(varName);
     if (var)
         addArgumentType(var->type);
     else
@@ -254,7 +268,7 @@ void addArgumentTypeFromName(char *varName)
 
 void callFunction(char *functionName)
 {
-    node *function = searchFunctionInScope(functionName);
+    symbolNode *function = searchFunctionInScope(functionName);
 
     if (!function)
     {
@@ -276,16 +290,17 @@ void callFunction(char *functionName)
         tempArg = tempArg->next;
         tempParam = tempParam->next;
     }
-    if(tempArg!=NULL || tempParam!=NULL){
+    if (tempArg != NULL || tempParam != NULL)
+    {
         printf("Error on line %d : number of arguments error when calling function '%s'  .\n\n", lineno, functionName);
         errors++;
         return;
     }
 }
 
-node *searchFunctionInScope(char *varName)
+symbolNode *searchFunctionInScope(char *varName)
 {
-    node *tempNode = symbolicTable;
+    symbolNode *tempNode = symbolicTable;
     while (tempNode != NULL)
     {
         if (
@@ -301,13 +316,13 @@ node *searchFunctionInScope(char *varName)
 void printSymbolicTable()
 {
 
-    printf("\n\n------------Symbolic table----------\n");
-    node *tempNode = symbolicTable;
-    printf("%-6s%-10s%-7s%-5s%-5s%-8s%s\n", "name", "nature", "type", "init", "used", "scopeId", "args");
+    printf("\n\n------------Symbolic table-------------------\n\n");
+    symbolNode *tempNode = symbolicTable;
+    printf("%-3s%-6s%-10s%-7s%-5s%-5s%-8s%s\n", "id", "name", "nature", "type", "init", "used", "scopeId", "args");
 
     while (tempNode != NULL)
     {
-        printf("%-6s%-10s%-7s%-5d%-5d%-8d", tempNode->name, tempNode->nature, tempNode->type, tempNode->isInitialised, tempNode->isUsed, tempNode->scope->id);
+        printf("%-3d%-6s%-10s%-7s%-5d%-5d%-8d", tempNode->index, tempNode->name, tempNode->nature, tempNode->type, tempNode->isInitialised, tempNode->isUsed, tempNode->scope->id);
         argumentNode *tempArg = tempNode->args;
         while (tempArg != NULL)
         {
@@ -318,4 +333,6 @@ void printSymbolicTable()
         printf("\n");
         tempNode = tempNode->next;
     }
+
+    printf("\n\n------------End of symbolic table------------\n");
 }

@@ -2,6 +2,7 @@
     #include <stdio.h>
     #include <string.h>
     #include "semanticAnalyser.h"
+    #include "assemblyCodeGenerator.h"
 
 
     int yyparse(void);
@@ -11,6 +12,8 @@
     #define YYERROR_VERBOSE 1;
     int errors=0;
     #define YYDEBUG 1
+    extern symbolNode* currentFunction;
+    extern scope* currentLocalScope;
 
 
     
@@ -59,17 +62,20 @@
 
 
 %type <stringValue> DataType ;
+%type <stringValue>Expression;
 
 
 %%
 
 Program:                MainClass ClassesDeclaration 
 MainClass :             CLASS IDENT ACC_OUV  {enterMemberScope();}
-                            PUBLIC STATIC VOID MAIN PAR_OUV STRINGARR IDENT PAR_FER ACC_OUV {enterLocalScope();}
+                            MethodsDeclarations
+                            PUBLIC STATIC VOID MAIN PAR_OUV STRINGARR IDENT PAR_FER ACC_OUV {enterLocalScope();}{clearParametersTypesList();currentFunction=addFunction("main","void");}
                                 VarsDeclarations
                                 Statements
                                 ReturnStatement
                             ACC_FER {exitCurrentLocalScope();}
+                            MethodsDeclarations
                         ACC_FER {exitCurrentMemberScope();}
 ClassesDeclaration:     ClassesDeclaration ClassDeclaration |
 ClassDeclaration:       ClassHead ACC_OUV {enterMemberScope();}
@@ -77,10 +83,10 @@ ClassDeclaration:       ClassHead ACC_OUV {enterMemberScope();}
                             MethodsDeclarations
                          ACC_FER {exitCurrentMemberScope();}
 ClassHead:              CLASS IDENT |  CLASS IDENT EXTENDS IDENT
-VarsDeclarations:        VarsDeclarations VarDeclaration |
+VarsDeclarations:       VarsDeclarations VarDeclaration |
 VarDeclaration:         DataType IDENT PT_VIRG {addVariable($2,$1);}
 MethodsDeclarations:    MethodsDeclarations MethodDeclaration |
-MethodDeclaration:      PUBLIC DataType IDENT {enterLocalScope();} PAR_OUV{clearParametersTypesList();} ArgumentsDeclarations PAR_FER {addFunction($3,$2);} ACC_OUV
+MethodDeclaration:      PUBLIC STATICITY DataType IDENT {enterLocalScope();} PAR_OUV{clearParametersTypesList();} ArgumentsDeclarations PAR_FER {addFunction($4,$3);} ACC_OUV
                             VarsDeclarations
                             Statements
                             ReturnStatement
@@ -90,11 +96,12 @@ ArgumentsDeclarations:  DataType IDENT {addParameterType($1);addVariable($2,$1);
                         DataType IDENT VIRG ArgumentsDeclarations {addParameterType($1);addVariable($2,$1);} |
                         ; 
 DataType:               TYPE | VOID| STRINGARR | IDENT;
+STATICITY:              STATIC |
 Statements:             Statements Statement|
                         ACC_OUV {enterLocalScope();} VarsDeclarations Statements ACC_FER  {exitCurrentLocalScope();}
                         |
                         ;
-Statement:              IF PAR_OUV Expression PAR_FER 
+Statement:              IF PAR_OUV Expression PAR_FER
                             Statements 
                         ELSE Statements 
                         |
@@ -102,11 +109,17 @@ Statement:              IF PAR_OUV Expression PAR_FER
                         |
                         PRINTLN PAR_OUV Expression PAR_FER PT_VIRG
                         |
-                        IDENT OPPAFFECT Expression PT_VIRG {initVar($1);}
+                        IDENT OPPAFFECT Expression PT_VIRG {
+                            initVar($1);
+                            symbolNode *variable=searchVariableInAccesibleScopes($1);
+                            addCodeNode("STORE",variable->index,currentFunction);    
+                        }
                         |
                         IDENT BRAK_OUV Expression BRAK_FER OPPAFFECT Expression PT_VIRG {initVar($1);}
                         |
                         THIS DOT IDENT PAR_OUV {clearArgumentsList();} Arguments PAR_FER PT_VIRG {callFunction($3);}
+                        |
+                        IDENT PAR_OUV {clearArgumentsList();} Arguments PAR_FER PT_VIRG {callFunction($1);}
                         
 
 Arguments:              IDENT VIRG Arguments {usingVar($1);addArgumentTypeFromName($1);}  
@@ -115,7 +128,19 @@ Arguments:              IDENT VIRG Arguments {usingVar($1);addArgumentTypeFromNa
                         | IDENT {usingVar($1);addArgumentTypeFromName($1);}   
                         | INT {addArgumentType("int");}
                         | BOOL {addArgumentType("boolean");}
-Expression:             Expression OPP Expression
+                        |
+Expression:             Expression OPP Expression {
+                            
+                            if (strcmp($2, "+") == 0) {
+                                addCodeNode("ADD",-1,currentFunction);
+                            }else if (strcmp($2, "-") == 0) {
+                                addCodeNode("SUB",-1,currentFunction);
+                            }else if (strcmp($2, "/") == 0) {
+                                addCodeNode("DIV",-1,currentFunction);
+                            }else if (strcmp($2, "*") == 0) {
+                                addCodeNode("MUL",-1,currentFunction);
+                            }
+                        }
                         |
                         Expression BRAK_OUV Expression BRAK_FER
                         |
@@ -123,11 +148,15 @@ Expression:             Expression OPP Expression
                         |
                         Expression DOT IDENT PAR_OUV Arguments PAR_FER 
                         |
-                        INT
+                        INT {addCodeNode("LDC",atoi($1),currentFunction);}
                         |
                         BOOL
                         |
-                        IDENT {usingVar($1);}
+                        IDENT {
+                            usingVar($1);
+                            symbolNode *variable=searchVariableInAccesibleScopes($1);
+                            addCodeNode("LDV",variable->index,currentFunction);
+                        }
                         |
                         THIS
                         |
@@ -151,6 +180,7 @@ int main( int argc, char **argv ){
     checkIfAllVarsAreUsed();
     if (errors==0) {
         printSymbolicTable();
+        printCodeTable(currentFunction->codeTable);
         printf("\n\nDONE WITH NO ERROS . \n\n");
         
     }
