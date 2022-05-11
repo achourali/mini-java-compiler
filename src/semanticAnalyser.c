@@ -266,7 +266,7 @@ void addArgumentTypeFromName(char *varName)
     }
 }
 
-void callFunction(char *functionName)
+symbolNode* callFunction(char *functionName)
 {
     symbolNode *function = searchFunctionInScope(functionName);
 
@@ -296,6 +296,7 @@ void callFunction(char *functionName)
         errors++;
         return;
     }
+    return function;
 }
 
 symbolNode *searchFunctionInScope(char *varName)

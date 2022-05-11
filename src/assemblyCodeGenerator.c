@@ -5,16 +5,18 @@
 #include "semanticAnalyser.h"
 
 symbolNode *currentFunction = NULL;
+symbolNode *mainFunction = NULL;
 whileNode *whileNodesList = NULL;
+extern symbolNode *symbolicTable;
 
-codeNode *addCodeNode(char *code_op, int operand, symbolNode *functionNode)
+codeNode *addCodeNode(char *code_op, int operand, symbolNode *functionNode,int calledFunctionIndex)
 {
     codeNode *newCodeNode = (codeNode *)malloc(sizeof(codeNode));
     newCodeNode->code_op = code_op;
     newCodeNode->operand = operand;
-    newCodeNode->fctName = functionNode->name;
     newCodeNode->previous = NULL;
     newCodeNode->next = NULL;
+    newCodeNode->calledFunctionIndex=calledFunctionIndex;
     if (functionNode->codeTable == NULL)
     {
         newCodeNode->index = 0;
@@ -32,19 +34,48 @@ codeNode *addCodeNode(char *code_op, int operand, symbolNode *functionNode)
     return newCodeNode;
 }
 
-void printCodeTable(codeNode *codeTable)
+symbolNode *getMainFunction()
 {
 
-    printf("\n\n------------Code table-------------------\n\n");
-    codeNode *temp = codeTable;
-    printf("%-4s%-13s%-9s%-7s\n", "id", "operator", "operand", "fctName");
+    symbolNode *tempNode = symbolicTable;
+
+    while (tempNode != NULL)
+    {
+        if (strcmp(tempNode->name, "main") == 0)
+        {
+
+            return tempNode;
+        }
+        tempNode = tempNode->next;
+    }
+}
+
+void printCodeTable(symbolNode *functionNode)
+{
+
+    codeNode *temp = functionNode->codeTable;
+    printf("\n\n------------Code table of %s-----------\n\n",functionNode->name);
+    printf("%-4s%-13s%-9s%-7s\n", "id", "operator", "operand", "call fct");
     while (temp != NULL)
     {
-        printf("%-4d%-13s%-9d%-7s\n", temp->index, temp->code_op, temp->operand, temp->fctName);
+        printf("%-4d%-13s%-9d%-5d\n", temp->index, temp->code_op, temp->operand, temp->calledFunctionIndex);
         temp = temp->next;
     }
 
     printf("\n\n------------End of Code table------------\n");
+}
+
+void printAllCodeTables()
+{
+
+    symbolNode *tempNode = symbolicTable;
+
+    while (tempNode != NULL)
+    {
+        if (strcmp(tempNode->nature, "FUNCTION")==0) 
+            printCodeTable(tempNode);
+        tempNode = tempNode->next;
+    }
 }
 
 void updateLastSIFAUX()
@@ -102,15 +133,15 @@ int getLastCodeNodeIndex()
     return temp->index;
 }
 
-
-whileNode* getLatestWhileNode(){
-    whileNode* latestWhileNode=whileNodesList;
-    whileNodesList=whileNodesList->previous;
+whileNode *getLatestWhileNode()
+{
+    whileNode *latestWhileNode = whileNodesList;
+    whileNodesList = whileNodesList->previous;
     return latestWhileNode;
 }
 
-void updateLastTantQueFaux(){
-
+void updateLastTantQueFaux()
+{
 
     codeNode *temp = currentFunction->codeTable;
     codeNode *lastSiFauxNode = NULL;
@@ -122,5 +153,4 @@ void updateLastTantQueFaux(){
     }
 
     lastSiFauxNode->operand = temp->index + 1;
-
 }

@@ -51,7 +51,7 @@ void addParameterType(char *type);
 void clearArgumentsList();
 void addArgumentTypeFromName(char *varName);
 void addArgumentType(char *type);
-void callFunction(char *functionName);
+symbolNode *callFunction(char *functionName);
 symbolNode *searchFunctionInScope(char *varName);
 symbolNode *searchVariableInAccesibleScopes(char *varName);
 

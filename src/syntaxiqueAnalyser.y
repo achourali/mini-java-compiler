@@ -74,7 +74,7 @@ MainClass :             CLASS IDENT ACC_OUV  {enterMemberScope();}
                                 VarsDeclarations
                                 Statements
                                 ReturnStatement
-                            ACC_FER {exitCurrentLocalScope();}
+                            ACC_FER {exitCurrentLocalScope();addCodeNode("SORTIE",-1,currentFunction,-1);}
                             MethodsDeclarations
                         ACC_FER {exitCurrentMemberScope();}
 ClassesDeclaration:     ClassesDeclaration ClassDeclaration |
@@ -86,7 +86,7 @@ ClassHead:              CLASS IDENT |  CLASS IDENT EXTENDS IDENT
 VarsDeclarations:       VarsDeclarations VarDeclaration |
 VarDeclaration:         DataType IDENT PT_VIRG {addVariable($2,$1);}
 MethodsDeclarations:    MethodsDeclarations MethodDeclaration |
-MethodDeclaration:      PUBLIC STATICITY DataType IDENT {enterLocalScope();} PAR_OUV{clearParametersTypesList();} ArgumentsDeclarations PAR_FER {addFunction($4,$3);} ACC_OUV
+MethodDeclaration:      PUBLIC STATICITY DataType IDENT {enterLocalScope();} PAR_OUV{clearParametersTypesList();} ArgumentsDeclarations PAR_FER {currentFunction=addFunction($4,$3);} ACC_OUV
                             VarsDeclarations
                             Statements
                             ReturnStatement
@@ -101,10 +101,10 @@ Statements:             Statements Statement|
                         ACC_OUV {enterLocalScope();} VarsDeclarations Statements ACC_FER  {exitCurrentLocalScope();}
                         |
 Statement:              IF PAR_OUV Expression PAR_FER
-                        {addCodeNode("SIFAUX",-1,currentFunction);}
+                        {addCodeNode("SIFAUX",-1,currentFunction,-1);}
                             ACC_OUV {enterLocalScope();} Statements ACC_FER  {exitCurrentLocalScope();} 
                         { 
-                            addCodeNode("SAUT",-1,currentFunction); 
+                            addCodeNode("SAUT",-1,currentFunction,-1); 
                             updateLastSIFAUX();
                         }
                         ELSE ACC_OUV {enterLocalScope();} Statements ACC_FER  {exitCurrentLocalScope();} 
@@ -113,11 +113,11 @@ Statement:              IF PAR_OUV Expression PAR_FER
                         WHILE PAR_OUV
                         {addWhileNode(getLastCodeNodeIndex()+1);}
                         Expression PAR_FER
-                        {addCodeNode("TANTQUEFAUX",-1,currentFunction);}
+                        {addCodeNode("TANTQUEFAUX",-1,currentFunction,-1);}
                         ACC_OUV {enterLocalScope();} Statements ACC_FER  {exitCurrentLocalScope();} 
                         {
                             whileNode* latestWhileNode=getLatestWhileNode();
-                            addCodeNode("TANTQUE",latestWhileNode->startingConditionIndex,currentFunction);
+                            addCodeNode("TANTQUE",latestWhileNode->startingConditionIndex,currentFunction,-1);
                             updateLastTantQueFaux();
                         }
                         |
@@ -126,14 +126,17 @@ Statement:              IF PAR_OUV Expression PAR_FER
                         IDENT OPPAFFECT Expression PT_VIRG {
                             initVar($1);
                             symbolNode *variable=searchVariableInAccesibleScopes($1);
-                            addCodeNode("STORE",variable->index,currentFunction);    
+                            addCodeNode("STORE",variable->index,currentFunction,-1);    
                         }
                         |
                         IDENT BRAK_OUV Expression BRAK_FER OPPAFFECT Expression PT_VIRG {initVar($1);}
                         |
                         THIS DOT IDENT PAR_OUV {clearArgumentsList();} Arguments PAR_FER PT_VIRG {callFunction($3);}
                         |
-                        IDENT PAR_OUV {clearArgumentsList();} Arguments PAR_FER PT_VIRG {callFunction($1);}
+                        IDENT PAR_OUV {clearArgumentsList();} Arguments PAR_FER PT_VIRG {
+                            symbolNode* calledFunction=callFunction($1);
+                            addCodeNode("APPEL",-1,currentFunction,-1);
+                        }
                         
 
 Arguments:              IDENT VIRG Arguments {usingVar($1);addArgumentTypeFromName($1);}  
@@ -146,25 +149,25 @@ Arguments:              IDENT VIRG Arguments {usingVar($1);addArgumentTypeFromNa
 Expression:             Expression OPP Expression {
                             
                             if (strcmp($2, "+") == 0) {
-                                addCodeNode("ADD",-1,currentFunction);
+                                addCodeNode("ADD",-1,currentFunction,-1);
                             }else if (strcmp($2, "-") == 0) {
-                                addCodeNode("SUB",-1,currentFunction);
+                                addCodeNode("SUB",-1,currentFunction,-1);
                             }else if (strcmp($2, "/") == 0) {
-                                addCodeNode("DIV",-1,currentFunction);
+                                addCodeNode("DIV",-1,currentFunction,-1);
                             }else if (strcmp($2, "*") == 0) {
-                                addCodeNode("MUL",-1,currentFunction);
+                                addCodeNode("MUL",-1,currentFunction,-1);
                             }else if (strcmp($2, "<=") == 0) {
-                                addCodeNode("INFE",-1,currentFunction);
+                                addCodeNode("INFE",-1,currentFunction,-1);
                             }else if (strcmp($2, ">=") == 0) {
-                                addCodeNode("SUPE",-1,currentFunction);
+                                addCodeNode("SUPE",-1,currentFunction,-1);
                             }else if (strcmp($2, "<") == 0) {
-                                addCodeNode("INF",-1,currentFunction);
+                                addCodeNode("INF",-1,currentFunction,-1);
                             }else if (strcmp($2, ">") == 0) {
-                                addCodeNode("SUP",-1,currentFunction);
+                                addCodeNode("SUP",-1,currentFunction,-1);
                             }else if (strcmp($2, "==") == 0) {
-                                addCodeNode("EGAL",-1,currentFunction);
+                                addCodeNode("EGAL",-1,currentFunction,-1);
                             }else if (strcmp($2, "!=") == 0) {
-                                addCodeNode("DIF",-1,currentFunction);
+                                addCodeNode("DIF",-1,currentFunction,-1);
                             }
                         }
                         |
@@ -174,14 +177,14 @@ Expression:             Expression OPP Expression {
                         |
                         Expression DOT IDENT PAR_OUV Arguments PAR_FER 
                         |
-                        INT {addCodeNode("LDC",atoi($1),currentFunction);}
+                        INT {addCodeNode("LDC",atoi($1),currentFunction,-1);}
                         |
                         BOOL
                         |
                         IDENT {
                             usingVar($1);
                             symbolNode *variable=searchVariableInAccesibleScopes($1);
-                            addCodeNode("LDV",variable->index,currentFunction);
+                            addCodeNode("LDV",variable->index,currentFunction,-1);
                         }
                         |
                         THIS
@@ -206,7 +209,7 @@ int main( int argc, char **argv ){
     checkIfAllVarsAreUsed();
     if (errors==0) {
         printSymbolicTable();
-        printCodeTable(currentFunction->codeTable);
+        printAllCodeTables();
         printf("\n\nDONE WITH NO ERROS . \n\n");
         
     }

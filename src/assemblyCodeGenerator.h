@@ -11,6 +11,7 @@ struct codeNode
     char *fctName;
     struct codeNode *previous;
     struct codeNode *next;
+    struct symbolNode *calledFunctionIndex;
 };
 typedef struct codeNode codeNode;
 typedef struct symbolNode symbolNode;
@@ -22,13 +23,14 @@ struct whileNode
 };
 typedef struct whileNode whileNode;
 
-codeNode *addCodeNode(char *code_op, int operand, symbolNode *functionNode);
-void printCodeTable(codeNode *codeTable);
+codeNode *addCodeNode(char *code_op, int operand, symbolNode *functionNode,int calledFunctionIndex);
+void printCodeTable(symbolNode *functionNode);
 void updateLastSIFAUX();
 void updateLastSAUT();
 void addWhileNode(int startingConditionIndex);
 int getLastCodeNodeIndex();
-whileNode* getLatestWhileNode();
+whileNode *getLatestWhileNode();
 void updateLastTantQueFaux();
+void printAllCodeTables();
 
 #endif
