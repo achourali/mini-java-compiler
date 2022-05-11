@@ -54,5 +54,6 @@ void addArgumentType(char *type);
 symbolNode *callFunction(char *functionName);
 symbolNode *searchFunctionInScope(char *varName);
 symbolNode *searchVariableInAccesibleScopes(char *varName);
+symbolNode *getByIndex(int index);
 
 #endif

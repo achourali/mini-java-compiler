@@ -87,8 +87,10 @@ VarsDeclarations:       VarsDeclarations VarDeclaration |
 VarDeclaration:         DataType IDENT PT_VIRG {addVariable($2,$1);}
 MethodsDeclarations:    MethodsDeclarations MethodDeclaration |
 MethodDeclaration:      PUBLIC STATICITY DataType IDENT {enterLocalScope();} PAR_OUV{clearParametersTypesList();} ArgumentsDeclarations PAR_FER {currentFunction=addFunction($4,$3);} ACC_OUV
+                            {addCodeNode("ENTREE",-1,currentFunction,-1);}
                             VarsDeclarations
                             Statements
+                            {addCodeNode("SORTIE",-1,currentFunction,-1);}
                             ReturnStatement
                         ACC_FER {exitCurrentLocalScope();}
 ReturnStatement:        RETURN Expression PT_VIRG | 
@@ -135,7 +137,7 @@ Statement:              IF PAR_OUV Expression PAR_FER
                         |
                         IDENT PAR_OUV {clearArgumentsList();} Arguments PAR_FER PT_VIRG {
                             symbolNode* calledFunction=callFunction($1);
-                            addCodeNode("APPEL",-1,currentFunction,-1);
+                            addCodeNode("APPEL",-1,currentFunction,calledFunction->index);
                         }
                         
 
@@ -209,7 +211,8 @@ int main( int argc, char **argv ){
     checkIfAllVarsAreUsed();
     if (errors==0) {
         printSymbolicTable();
-        printAllCodeTables();
+        /* printAllCodeTables(); */
+        generateMainCode();
         printf("\n\nDONE WITH NO ERROS . \n\n");
         
     }

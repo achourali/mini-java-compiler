@@ -125,7 +125,7 @@ symbolNode *searchVariableInAccesibleScopes(char *varName)
     scope *tempScope = currentLocalScope;
     while (tempScope != NULL)
     {
-            varWithSameName = searchVaribleInScope(varName, tempScope);
+        varWithSameName = searchVaribleInScope(varName, tempScope);
         if (varWithSameName != NULL)
         {
             break;
@@ -136,7 +136,6 @@ symbolNode *searchVariableInAccesibleScopes(char *varName)
 
     if (varWithSameName == NULL)
         varWithSameName = searchVaribleInScope(varName, currentMemberScope);
-
 
     return varWithSameName;
 }
@@ -266,7 +265,7 @@ void addArgumentTypeFromName(char *varName)
     }
 }
 
-symbolNode* callFunction(char *functionName)
+symbolNode *callFunction(char *functionName)
 {
     symbolNode *function = searchFunctionInScope(functionName);
 
@@ -309,6 +308,17 @@ symbolNode *searchFunctionInScope(char *varName)
             strcmp(tempNode->nature, "FUNCTION") == 0 &&
             tempNode->scope == currentMemberScope)
             return tempNode;
+        tempNode = tempNode->next;
+    }
+    return NULL;
+}
+
+symbolNode *getByIndex(int index)
+{
+    symbolNode *tempNode = symbolicTable;
+    while (tempNode != NULL)
+    {
+        if(tempNode->index==index) return tempNode;
         tempNode = tempNode->next;
     }
     return NULL;

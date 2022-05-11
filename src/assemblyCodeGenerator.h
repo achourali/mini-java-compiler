@@ -32,5 +32,6 @@ int getLastCodeNodeIndex();
 whileNode *getLatestWhileNode();
 void updateLastTantQueFaux();
 void printAllCodeTables();
+void generateMainCode();
 
 #endif
