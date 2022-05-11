@@ -161,6 +161,10 @@ Expression:             Expression OPP Expression {
                                 addCodeNode("INF",-1,currentFunction);
                             }else if (strcmp($2, ">") == 0) {
                                 addCodeNode("SUP",-1,currentFunction);
+                            }else if (strcmp($2, "==") == 0) {
+                                addCodeNode("EGAL",-1,currentFunction);
+                            }else if (strcmp($2, "!=") == 0) {
+                                addCodeNode("DIF",-1,currentFunction);
                             }
                         }
                         |
