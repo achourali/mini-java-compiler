@@ -15,10 +15,20 @@ struct codeNode
 typedef struct codeNode codeNode;
 typedef struct symbolNode symbolNode;
 
-codeNode *addCodeNode(char *code_op, int operand,symbolNode* functionNode);
-void printCodeTable(codeNode* codeTable);
+struct whileNode
+{
+    struct whileNode *previous;
+    int startingConditionIndex;
+};
+typedef struct whileNode whileNode;
+
+codeNode *addCodeNode(char *code_op, int operand, symbolNode *functionNode);
+void printCodeTable(codeNode *codeTable);
 void updateLastSIFAUX();
 void updateLastSAUT();
-
+void addWhileNode(int startingConditionIndex);
+int getLastCodeNodeIndex();
+whileNode* getLatestWhileNode();
+void updateLastTantQueFaux();
 
 #endif

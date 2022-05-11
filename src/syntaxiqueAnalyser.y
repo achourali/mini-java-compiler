@@ -100,18 +100,26 @@ STATICITY:              STATIC |
 Statements:             Statements Statement|
                         ACC_OUV {enterLocalScope();} VarsDeclarations Statements ACC_FER  {exitCurrentLocalScope();}
                         |
-                        ;
 Statement:              IF PAR_OUV Expression PAR_FER
                         {addCodeNode("SIFAUX",-1,currentFunction);}
-                            Statements 
+                            ACC_OUV {enterLocalScope();} Statements ACC_FER  {exitCurrentLocalScope();} 
                         { 
                             addCodeNode("SAUT",-1,currentFunction); 
                             updateLastSIFAUX();
                         }
-                        ELSE Statements 
+                        ELSE ACC_OUV {enterLocalScope();} Statements ACC_FER  {exitCurrentLocalScope();} 
                         {updateLastSAUT();}
                         |
-                        WHILE PAR_OUV Expression PAR_FER Statements 
+                        WHILE PAR_OUV
+                        {addWhileNode(getLastCodeNodeIndex()+1);}
+                        Expression PAR_FER
+                        {addCodeNode("TANTQUEFAUX",-1,currentFunction);}
+                        ACC_OUV {enterLocalScope();} Statements ACC_FER  {exitCurrentLocalScope();} 
+                        {
+                            whileNode* latestWhileNode=getLatestWhileNode();
+                            addCodeNode("TANTQUE",latestWhileNode->startingConditionIndex,currentFunction);
+                            updateLastTantQueFaux();
+                        }
                         |
                         PRINTLN PAR_OUV Expression PAR_FER PT_VIRG
                         |
